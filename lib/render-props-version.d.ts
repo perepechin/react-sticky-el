@@ -1,6 +1,6 @@
-import type { RenderProps } from "./types";
 import { Component, CSSProperties } from "react";
 import type { Rect } from "./helpers/rect";
+import type { RenderProps } from "./types";
 type State = {
     isFixed: boolean;
     height: number;
@@ -37,7 +37,7 @@ declare class Sticky extends Component<RenderProps, State> {
     updateScrollEl(): void;
     updateBoundaryEl(): void;
     initialize(): void;
-    componentDidUpdate({ scrollElement, boundaryElement, disabled }: RenderProps): void;
+    componentDidUpdate({ scrollElement, boundaryElement, disabled, }: RenderProps): void;
     componentDidMount(): void;
     componentWillUnmount(): void;
     render(): import("react").ReactNode;

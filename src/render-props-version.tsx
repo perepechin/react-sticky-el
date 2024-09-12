@@ -1,61 +1,86 @@
 // @flow strict
 
-import type {RenderProps, StickyMode} from "./types";
-import {Component, CSSProperties} from "react";
+import { Component, CSSProperties } from "react";
 import { listen, unlisten } from "./helpers/events";
 import find from "./helpers/find";
 import getClosestTransformedParent from "./helpers/getClosestTransformedParent";
-import { getRect, infiniteRect, isIntersecting } from "./helpers/rect";
 import type { Rect } from "./helpers/rect";
+import { getRect, infiniteRect, isIntersecting } from "./helpers/rect";
+import type { RenderProps, StickyMode } from "./types";
 
 type State = {
-  isFixed: boolean,
-  height: number,
-  wrapperStyles?: CSSProperties,
-  holderStyles?: CSSProperties
-}
+  isFixed: boolean;
+  height: number;
+  wrapperStyles?: CSSProperties;
+  holderStyles?: CSSProperties;
+};
 
 type ContainerRect = {
-  top: number,
-  bottom: number,
-  height: number,
-  width: number,
-  boundaryTop: number,
-  boundaryBottom: number,
-}
+  top: number;
+  bottom: number;
+  height: number;
+  width: number;
+  boundaryTop: number;
+  boundaryBottom: number;
+};
 
-const buildTopStyles = (container:ContainerRect, props: RenderProps): CSSProperties => {
+const buildTopStyles = (
+  container: ContainerRect,
+  props: RenderProps
+): CSSProperties => {
   const { bottomOffset, hideOnBoundaryHit } = props;
   const { top, height, width, boundaryBottom } = container;
 
   // above boundary
-  if (hideOnBoundaryHit || (top + height + bottomOffset < boundaryBottom)) {
-    return { top: `${top}px`, width: `${width}px`, position: 'fixed' };
+  if (hideOnBoundaryHit || top + height + bottomOffset < boundaryBottom) {
+    return { top: `${top}px`, width: `${width}px`, position: "fixed" };
   }
 
   // reaching boundary
   if (!hideOnBoundaryHit && boundaryBottom > 0) {
-    return { top: `${boundaryBottom - height - bottomOffset}px`, width: `${width}px`, position: 'fixed' };
+    return {
+      top: `${boundaryBottom - height - bottomOffset}px`,
+      width: `${width}px`,
+      position: "fixed",
+    };
   }
 
   // below boundary
-  return { width: `${width}px`, bottom: `${bottomOffset}px`, position: 'absolute' };
+  return {
+    width: `${width}px`,
+    bottom: `${bottomOffset}px`,
+    position: "absolute",
+  };
 };
 
-const buildBottomStyles = (container: ContainerRect, props: RenderProps): CSSProperties => {
+const buildBottomStyles = (
+  container: ContainerRect,
+  props: RenderProps
+): CSSProperties => {
   const { bottomOffset, hideOnBoundaryHit } = props;
   const { bottom, height, width, boundaryTop } = container;
 
-  if (hideOnBoundaryHit || (bottom - height - bottomOffset > boundaryTop)) {
-    return { width: `${width}px`, top: `${bottom - height}px`, position: 'fixed' };
+  if (hideOnBoundaryHit || bottom - height - bottomOffset > boundaryTop) {
+    return {
+      width: `${width}px`,
+      top: `${bottom - height}px`,
+      position: "fixed",
+    };
   }
 
-  return { width: `${width}px`, top: `${bottomOffset}px`, position: 'absolute' };
+  return {
+    width: `${width}px`,
+    top: `${bottomOffset}px`,
+    position: "absolute",
+  };
 };
 
-const buildStickyStyle = (mode: StickyMode, props: RenderProps, container: ContainerRect): CSSProperties =>
-  (mode === 'top' ? buildTopStyles : buildBottomStyles)(container, props);
-
+const buildStickyStyle = (
+  mode: StickyMode,
+  props: RenderProps,
+  container: ContainerRect
+): CSSProperties =>
+  (mode === "top" ? buildTopStyles : buildBottomStyles)(container, props);
 
 const isEqual = (obj1: State, obj2: State) => {
   const styles1 = obj1.wrapperStyles;
@@ -67,7 +92,7 @@ const isEqual = (obj1: State, obj2: State) => {
     (!styles1 && styles2) ||
     (styles1 && !styles2)
   ) {
-    return false
+    return false;
   }
 
   if (!styles2) {
@@ -87,7 +112,7 @@ const isEqual = (obj1: State, obj2: State) => {
 
 class Sticky extends Component<RenderProps, State> {
   static defaultProps = {
-    mode: 'top' as const,
+    mode: "top" as const,
     topOffset: 0,
     bottomOffset: 0,
     isIOSFixEnabled: true,
@@ -96,7 +121,7 @@ class Sticky extends Component<RenderProps, State> {
     onFixedToggle: undefined,
     boundaryElement: undefined,
     hideOnBoundaryHit: true,
-    scrollElement: 'window',
+    scrollElement: "window",
     dontUpdateHolderHeightWhenSticky: false,
   };
 
@@ -115,7 +140,7 @@ class Sticky extends Component<RenderProps, State> {
     isFixed: false,
     wrapperStyles: undefined,
     holderStyles: undefined,
-    height: 0
+    height: 0,
   };
 
   holderRef = (holderEl: HTMLElement | null) => {
@@ -134,19 +159,13 @@ class Sticky extends Component<RenderProps, State> {
   };
 
   checkPosition = () => {
-    const {
-      holderEl,
-      wrapperEl,
-      boundaryEl,
-      scrollEl,
-      disabled
-    } = this;
+    const { holderEl, wrapperEl, boundaryEl, scrollEl, disabled } = this;
 
     if (!scrollEl || !holderEl || !wrapperEl) {
       console.error("Missing required elements:", {
         scrollEl,
         holderEl,
-        wrapperEl
+        wrapperEl,
       });
       return;
     }
@@ -156,18 +175,18 @@ class Sticky extends Component<RenderProps, State> {
       onFixedToggle,
       offsetTransforms,
       isIOSFixEnabled,
-      dontUpdateHolderHeightWhenSticky
+      dontUpdateHolderHeightWhenSticky,
     } = this.props;
 
     if (disabled) {
       if (this.state.isFixed) {
-        this.setState({ isFixed: false, wrapperStyles: {} })
+        this.setState({ isFixed: false, wrapperStyles: {} });
       }
-      return
+      return;
     }
 
     if (!holderEl.getBoundingClientRect || !wrapperEl.getBoundingClientRect) {
-      return
+      return;
     }
 
     const holderRect: Rect = holderEl.getBoundingClientRect();
@@ -175,7 +194,12 @@ class Sticky extends Component<RenderProps, State> {
     const boundaryRect: Rect = boundaryEl ? getRect(boundaryEl) : infiniteRect;
     const scrollRect = getRect(scrollEl);
 
-    const isFixed = this.isFixed(holderRect, wrapperRect, boundaryRect, scrollRect);
+    const isFixed = this.isFixed(
+      holderRect,
+      wrapperRect,
+      boundaryRect,
+      scrollRect
+    );
 
     let offsets = null;
     if (offsetTransforms && isFixed && scrollEl instanceof HTMLElement) {
@@ -185,36 +209,55 @@ class Sticky extends Component<RenderProps, State> {
       }
     }
 
-    const minHeight = this.state.isFixed && dontUpdateHolderHeightWhenSticky && this.lastMinHeight ? this.lastMinHeight : wrapperRect.height;
+    const minHeight =
+      this.state.isFixed &&
+      dontUpdateHolderHeightWhenSticky &&
+      this.lastMinHeight
+        ? this.lastMinHeight
+        : wrapperRect.height;
     this.lastMinHeight = minHeight;
 
     // To ensure that this component becomes sticky immediately on mobile devices instead
     // of disappearing until the scroll event completes, we add `transform: translateZ(0)`
     // to 'kick' rendering of this element to the GPU
     // @see http://stackoverflow.com/questions/32875046
-    const iosRenderingFixStyles: CSSProperties | undefined = isIOSFixEnabled ? {
-      transform: 'translateZ(0)',
-      WebkitTransform: 'translateZ(0)'
-    } : undefined;
+    const iosRenderingFixStyles: CSSProperties | undefined = isIOSFixEnabled
+      ? {
+          transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+        }
+      : undefined;
 
     const newState: State = {
       isFixed,
       height: wrapperRect.height,
       holderStyles: { minHeight: `${minHeight}px` },
-      wrapperStyles: isFixed ? {
-        ...iosRenderingFixStyles,
-        ...buildStickyStyle(mode, this.props, {
-          boundaryTop: mode === 'bottom' ? boundaryRect.top : 0,
-          boundaryBottom: mode === 'top' ? boundaryRect.bottom : 0,
-          top: mode === 'top' ? scrollRect.top - (offsets ? offsets.top : 0) : 0,
-          bottom: mode === 'bottom' ? scrollRect.bottom - (offsets ? offsets.bottom : 0) : 0,
-          width: holderRect.width,
-          height: wrapperRect.height
-        })
-      } : iosRenderingFixStyles
+      wrapperStyles: isFixed
+        ? {
+            ...iosRenderingFixStyles,
+            ...buildStickyStyle(mode, this.props, {
+              boundaryTop: mode === "bottom" ? boundaryRect.top : 0,
+              boundaryBottom: mode === "top" ? boundaryRect.bottom : 0,
+              top:
+                mode === "top"
+                  ? scrollRect.top - (offsets ? offsets.top : 0)
+                  : 0,
+              bottom:
+                mode === "bottom"
+                  ? scrollRect.bottom - (offsets ? offsets.bottom : 0)
+                  : 0,
+              width: holderRect.width,
+              height: wrapperRect.height,
+            }),
+          }
+        : iosRenderingFixStyles,
     };
 
-    if (isFixed !== this.state.isFixed && onFixedToggle && typeof onFixedToggle === 'function') {
+    if (
+      isFixed !== this.state.isFixed &&
+      onFixedToggle &&
+      typeof onFixedToggle === "function"
+    ) {
       onFixedToggle(isFixed);
     }
 
@@ -223,31 +266,41 @@ class Sticky extends Component<RenderProps, State> {
     }
   };
 
-  isFixed(holderRect: Rect, wrapperRect: Rect, boundaryRect: Rect, scrollRect: Rect) {
-    const {
-      hideOnBoundaryHit,
-      bottomOffset,
-      topOffset,
-      mode
-    } = this.props;
+  isFixed(
+    holderRect: Rect,
+    wrapperRect: Rect,
+    boundaryRect: Rect,
+    scrollRect: Rect
+  ) {
+    const { hideOnBoundaryHit, bottomOffset, topOffset, mode } = this.props;
 
     if (this.disabled) {
-      return false
+      return false;
     }
 
-    if (hideOnBoundaryHit && boundaryRect && !isIntersecting(boundaryRect, scrollRect, topOffset, bottomOffset)) {
-      return false
+    if (
+      hideOnBoundaryHit &&
+      boundaryRect &&
+      !isIntersecting(boundaryRect, scrollRect, topOffset, bottomOffset)
+    ) {
+      return false;
     }
 
-    const hideOffset = hideOnBoundaryHit ? wrapperRect.height + bottomOffset : 0;
+    const hideOffset = hideOnBoundaryHit
+      ? wrapperRect.height + bottomOffset
+      : 0;
 
-    if (mode === 'top') {
-      return (holderRect.top + topOffset < scrollRect.top)
-        && (scrollRect.top + hideOffset <= boundaryRect.bottom);
+    if (mode === "top") {
+      return (
+        holderRect.top + topOffset < scrollRect.top &&
+        scrollRect.top + hideOffset <= boundaryRect.bottom
+      );
     }
 
-    return (holderRect.bottom - topOffset > scrollRect.bottom)
-      && (scrollRect.bottom - hideOffset >= boundaryRect.top);
+    return (
+      holderRect.bottom - topOffset > scrollRect.bottom &&
+      scrollRect.bottom - hideOffset >= boundaryRect.top
+    );
   }
 
   updateScrollEl() {
@@ -256,22 +309,25 @@ class Sticky extends Component<RenderProps, State> {
     }
 
     if (this.scrollEl) {
-      unlisten(this.scrollEl, [ 'scroll' ], this.checkPosition);
+      unlisten(this.scrollEl, ["scroll"], this.checkPosition);
       this.scrollEl = null;
     }
 
     const { scrollElement } = this.props;
 
-    if (typeof scrollElement === 'string') {
+    if (typeof scrollElement === "string") {
       this.scrollEl = find(scrollElement, this.wrapperEl);
     } else {
       this.scrollEl = scrollElement;
     }
 
     if (this.scrollEl) {
-      listen(this.scrollEl, [ 'scroll' ], this.checkPosition)
+      listen(this.scrollEl, ["scroll"], this.checkPosition);
     } else {
-      console.error('Cannot find scrollElement ' + (typeof scrollElement === 'string' ? scrollElement : 'unknown'));
+      console.error(
+        "Cannot find scrollElement " +
+          (typeof scrollElement === "string" ? scrollElement : "unknown")
+      );
     }
   }
 
@@ -291,29 +347,40 @@ class Sticky extends Component<RenderProps, State> {
   }
 
   initialize() {
-    const {
-      positionRecheckInterval,
-      disabled
-    } = this.props;
+    const { positionRecheckInterval, disabled } = this.props;
 
     this.disabled = disabled;
 
     // we should always listen to window events because they will affect the layout of the whole page
-    listen(window, [ 'scroll', 'resize', 'pageshow', 'load' ], this.checkPosition);
+    listen(
+      window,
+      ["scroll", "resize", "pageshow", "load"],
+      this.checkPosition
+    );
 
     this.checkPosition();
 
     if (positionRecheckInterval) {
-      this.checkPositionIntervalId = setInterval(this.checkPosition, positionRecheckInterval);
+      this.checkPositionIntervalId = setInterval(
+        this.checkPosition,
+        positionRecheckInterval
+      );
     }
   }
 
-  componentDidUpdate({ scrollElement, boundaryElement, disabled }: RenderProps) {        
+  componentDidUpdate({
+    scrollElement,
+    boundaryElement,
+    disabled,
+  }: RenderProps) {
     if (scrollElement !== this.props.scrollElement || this.scrollEl === null) {
       this.updateScrollEl();
     }
 
-    if (boundaryElement !== this.props.boundaryElement/* || this.boundaryEl === null*/) {
+    if (
+      boundaryElement !== this.props.boundaryElement ||
+      this.boundaryEl === null
+    ) {
       this.updateBoundaryEl();
     }
 
@@ -326,15 +393,21 @@ class Sticky extends Component<RenderProps, State> {
   componentDidMount() {
     this.initialize();
     if (this.wrapperEl === null) {
-      console.error("Wrapper element is missing, please make sure that you have assigned refs correctly");
+      console.error(
+        "Wrapper element is missing, please make sure that you have assigned refs correctly"
+      );
     }
   }
 
   componentWillUnmount() {
     if (this.scrollEl) {
-      unlisten(this.scrollEl, [ 'scroll' ], this.checkPosition);
+      unlisten(this.scrollEl, ["scroll"], this.checkPosition);
     }
-    unlisten(window, [ 'scroll', 'resize', 'pageshow', 'load' ], this.checkPosition);
+    unlisten(
+      window,
+      ["scroll", "resize", "pageshow", "load"],
+      this.checkPosition
+    );
     this.boundaryEl = null;
     this.scrollEl = null;
     if (this.checkPositionIntervalId) {
@@ -351,8 +424,8 @@ class Sticky extends Component<RenderProps, State> {
       wrapperRef,
       isFixed,
       wrapperStyles,
-      holderStyles
-    })
+      holderStyles,
+    });
   }
 }
 
