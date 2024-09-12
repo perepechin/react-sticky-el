@@ -358,7 +358,9 @@ class Sticky extends Component<RenderProps, State> {
       this.checkPosition
     );
 
-    this.checkPosition();
+    if (!this.scrollEl || !this.holderEl || !this.wrapperEl) {
+      this.checkPosition();
+    }
 
     if (positionRecheckInterval) {
       this.checkPositionIntervalId = setInterval(
